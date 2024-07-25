@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbox</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+</head>
+<body>
+    <div id="chatbox-container">
+        <div id="chatbox"></div>
+        <form id="chatForm">
+            <input type="text" id="username" name="username" placeholder="Username" required>
+            <textarea id="message" name="message" placeholder="Type your message here..." required></textarea>
+            <button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script>
+        $(document).ready(function() {
+            function loadMessages() {
+                $.getJSON('/get_messages', function(data) {
+                    $('#chatbox').empty();
+                    for (let msg of data) {
+                        let timeAgo = moment(msg[2]).fromNow();
+                        $('#chatbox').append(
+                            `<div class="message">
+                                <div class="message-header">
+                                    <strong>${msg[0]}</strong>: <em>${timeAgo}</em>
+                                </div>
+                                <div class="message-body">${msg[1]}</div>
+                            </div>`
+                        );
+                    }
+                });
+            }
+
+            $('#chatForm').on('submit', function(e) {
+                e.preventDefault();
+                $.post('/send_message', $(this).serialize(), function() {
+                    $('#message').val('');
+                    loadMessages();
+                });
+            });
+
+            loadMessages();
+            setInterval(loadMessages, 5000);
+        });
+    </script>
+</body>
+</html>
